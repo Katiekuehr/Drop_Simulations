@@ -375,7 +375,7 @@ def max_radius_over_t(all_max_radii, contact_time_index, all_times_list):
 
     return [max_radius, time_of_max_radius]
 
-def coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_time_list, Bo, We):
+def alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_time_list, Bo, We): 
 
     """
     Function that calculates the coefficient of restitution and contact time for a droplet impact.
@@ -403,6 +403,9 @@ def coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_time_list
             index = i
             break
 
+    #Handling if no take-off occurs
+    if index == None:
+        return [None, None, None]
 
     #Averages of last contact and first non-comtact times
     final_velocity = (all_v_list[index] + all_v_list[index-1])/2
@@ -410,9 +413,6 @@ def coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_time_list
     contact_time = (all_time_list[index] + all_time_list[index-1])/2
     last_time_in_contact =  index
 
-    #Handling if no take-off occurs
-    if final_velocity == None:
-        return None
 
     #Calculating of coefficient of restitution squared
     coeff_rest_squared = (((Bo * (final_height - 1))
@@ -423,6 +423,31 @@ def coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_time_list
 
 
     return [coeff_rest_squared_float, contact_time, last_time_in_contact]
+
+def center_coefficient_of_restitution(all_v_list, all_m_list):
+    
+    final_velocity = None
+    initial_velocity = None
+    index = None
+
+    for ind in range(len(all_m_list)):
+        if all_m_list[ind] == 0:
+            if all_m_list[ind+1] != 0:
+                initial_velocity = (all_v_list[ind]+all_v_list[ind+1])/2
+                break
+
+    for i in range(1, len(all_m_list)-1):
+        if all_m_list[i] == 0 and all_m_list[i-1] > 0: #Marks end of contact
+            index = i
+            break
+    #Handling if no take-off occurs
+    if index == None:
+        return None
+
+    #Averages of last contact and first non-comtact times
+    final_velocity = (all_v_list[index] + all_v_list[index-1])/2
+    coef_rest = (-final_velocity)/(initial_velocity)
+    return float(coef_rest)
 
 def maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec):
 
@@ -573,10 +598,24 @@ def running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo, theta_
     all_north_poles_list = [np.asarray([height_poles(amps_prev_vec, H, n_thetas)[0]])]
     all_south_poles_list = [np.asarray([height_poles(amps_prev_vec, H, n_thetas)[1]])]
     all_maximum_radii_list = [max_radius_at_each_t(amps_prev_vec, n_thetas, theta_vec)] 
+
+    #to stop after lift-off
+    lift_off = False
+    count = 0
     
     
     while all_times_list[ind_time] < all_times_list[-1]:
         #print(m_prev)
+
+        if len(all_m_list) > 2:
+            if all_m_list[-1] == 0:
+                if all_m_list[-2] > 0:
+                    lift_off = True
+        if lift_off == True:
+            count += 1
+        if count == 50:
+            break
+
 
         #Time step is the difference in the times_list
         delta_t = all_times_list[ind_time+1] - all_times_list[ind_time]
@@ -653,29 +692,51 @@ def running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo, theta_
                                                     n_thetas,
                                                     Bo,
                                                     Oh)
-        if err_m_prev_p1 < err_m_prev:
-            sol_vec_m_prev_p2, err_m_prev_p2 = try_q(amps_prev_vec,
-                                                    amps_vel_prev_vec,
-                                                    h_prev,
-                                                    v_prev,
-                                                    m_prev+2,
-                                                    delta_t,
-                                                    n_thetas,
-                                                    Bo,
-                                                    Oh)
-            if err_m_prev_p2 < err_m_prev_p1:
-            #insert new time step
+            if err_m_prev_p1 < err_m_prev:
+                sol_vec_m_prev_p2, err_m_prev_p2 = try_q(amps_prev_vec,
+                                                        amps_vel_prev_vec,
+                                                        h_prev,
+                                                        v_prev,
+                                                        m_prev+2,
+                                                        delta_t,
+                                                        n_thetas,
+                                                        Bo,
+                                                        Oh)
+                if err_m_prev_p2 < err_m_prev_p1:
+                #insert new time step
+                    time_insert = (all_times_list[ind_time] + all_times_list[ind_time+1])/2
+                    all_times_list.insert(ind_time+1, time_insert)
+                else:
+                    #accept solution and move forward in time
+                    ind_time += 1
+                    m_prev += 1
+                    amps_prev_vec = sol_vec_m_prev_p1[:(n_thetas-1)]
+                    amps_vel_prev_vec = sol_vec_m_prev_p1[(n_thetas-1):(2*n_thetas-2)]
+                    press_prev_vec = sol_vec_m_prev_p1[(2*n_thetas-2):-2]
+                    h_prev = np.reshape(sol_vec_m_prev_p1[-2],(1,1))
+                    v_prev = np.reshape(sol_vec_m_prev_p1[-1],(1,1))
+                    all_amps_list.append(amps_prev_vec)
+                    all_amps_vel_list.append(amps_vel_prev_vec)
+                    all_press_list.append(press_prev_vec)
+                    all_h_list.append(h_prev)
+                    all_v_list.append(v_prev)
+                    all_m_list.append(m_prev)
+                    all_north_poles_list.append(height_poles(amps_prev_vec, h_prev, n_thetas)[0])
+                    all_south_poles_list.append(height_poles(amps_prev_vec, h_prev, n_thetas)[1])
+                    all_maximum_radii_list.append(max_radius_at_each_t(amps_prev_vec, n_thetas, theta_vec))
+                
+            elif err_m_prev_p1 == np.inf and err_m_prev == np.inf and err_m_prev_m1 == np.inf:
+                #insert new time step
                 time_insert = (all_times_list[ind_time] + all_times_list[ind_time+1])/2
                 all_times_list.insert(ind_time+1, time_insert)
-            else:
-                #accept solution and move forward in time
+
+            else: #Stick to the same q and move forward in time.
                 ind_time += 1
-                m_prev += 1
-                amps_prev_vec = sol_vec_m_prev_p1[:(n_thetas-1)]
-                amps_vel_prev_vec = sol_vec_m_prev_p1[(n_thetas-1):(2*n_thetas-2)]
-                press_prev_vec = sol_vec_m_prev_p1[(2*n_thetas-2):-2]
-                h_prev = np.reshape(sol_vec_m_prev_p1[-2],(1,1))
-                v_prev = np.reshape(sol_vec_m_prev_p1[-1],(1,1))
+                amps_prev_vec = sol_vec_m_prev[:(n_thetas-1)]
+                amps_vel_prev_vec = sol_vec_m_prev[(n_thetas-1):(2*n_thetas-2)]
+                press_prev_vec = sol_vec_m_prev[(2*n_thetas-2):-2]
+                h_prev = np.reshape(sol_vec_m_prev[-2],(1,1))
+                v_prev = np.reshape(sol_vec_m_prev[-1],(1,1))
                 all_amps_list.append(amps_prev_vec)
                 all_amps_vel_list.append(amps_vel_prev_vec)
                 all_press_list.append(press_prev_vec)
@@ -685,28 +746,6 @@ def running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo, theta_
                 all_north_poles_list.append(height_poles(amps_prev_vec, h_prev, n_thetas)[0])
                 all_south_poles_list.append(height_poles(amps_prev_vec, h_prev, n_thetas)[1])
                 all_maximum_radii_list.append(max_radius_at_each_t(amps_prev_vec, n_thetas, theta_vec))
-            
-        elif err_m_prev_p1 == np.inf and err_m_prev == np.inf and err_m_prev_m1 == np.inf:
-            #insert new time step
-            time_insert = (all_times_list[ind_time] + all_times_list[ind_time+1])/2
-            all_times_list.insert(ind_time+1, time_insert)
-
-        else: #Stick to the same q and move forward in time.
-            ind_time += 1
-            amps_prev_vec = sol_vec_m_prev[:(n_thetas-1)]
-            amps_vel_prev_vec = sol_vec_m_prev[(n_thetas-1):(2*n_thetas-2)]
-            press_prev_vec = sol_vec_m_prev[(2*n_thetas-2):-2]
-            h_prev = np.reshape(sol_vec_m_prev[-2],(1,1))
-            v_prev = np.reshape(sol_vec_m_prev[-1],(1,1))
-            all_amps_list.append(amps_prev_vec)
-            all_amps_vel_list.append(amps_vel_prev_vec)
-            all_press_list.append(press_prev_vec)
-            all_h_list.append(h_prev)
-            all_v_list.append(v_prev)
-            all_m_list.append(m_prev)
-            all_north_poles_list.append(height_poles(amps_prev_vec, h_prev, n_thetas)[0])
-            all_south_poles_list.append(height_poles(amps_prev_vec, h_prev, n_thetas)[1])
-            all_maximum_radii_list.append(max_radius_at_each_t(amps_prev_vec, n_thetas, theta_vec))
 
     return [all_amps_list, all_amps_vel_list, all_press_list, all_h_list, all_v_list, all_m_list, all_north_poles_list, all_south_poles_list, all_maximum_radii_list, all_times_list]
 
@@ -814,7 +853,7 @@ def amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thet
     plt.close()
     return plot_path
 
-def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end, Bond, Web, Oh, n_thetas, n_sampling_time_L_mode):
+def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_CGS, T_end, Bond, Web, Ohn, n_thetas, n_sampling_time_L_mode):
 
     """
     Function that runs the simulation and saves all results and plots to a designated path on your computer.
@@ -827,6 +866,7 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
     either:
     rho_in_CGS (float): Density of chosen liquid in g/cm^3.
     sigma_in_CGS (float): Surface tension of chosen liquid in dyne/cm.
+    nu_in_GCS (float): in cm^2/s.
     g_in_CGS (float): Gravity in cm/s^2.
     R_in_CGS (float): Radius of droplet in cm.
     V_in_CGS (float): Velocity of the droplet's center of mass in cm/s.
@@ -837,6 +877,8 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
         If want to set it to 0: Input 0
     Web (float): Weber number, non-dimensional velocity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and V_in_CGS: input: None.
         If want to set it to 0: Input 0   
+    Ohn (float): Ohnesorghe number, non-dimensional viscosity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and nu_in_CGS: input: None.
+        If want to set it to 0: Input 0
     (and all others = None).
 
     Outputs: 
@@ -858,9 +900,15 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
         We = rho_in_CGS*V_in_CGS**2*R_in_CGS/sigma_in_CGS
     else:
         We = Web
+    
+    if Ohn == None:
+        Oh = nu_in_GCS * np.sqrt((rho_in_CGS)/(sigma_in_CGS*R_in_CGS))
+    else:
+        Oh = Ohn
 
-    desktop_path = os.path.join(os.path.expanduser('~'), 'Desktop', 'Spreadsheet_New_Parameters')
-    folder_name = os.path.join(desktop_path, f'simulation_{R_in_CGS}_{V_in_CGS}_{round(Bo, 6)}_{round(We, 6)}')
+    print(We, Bo, Oh)
+    desktop_path = os.path.join('Desktop', 'Try')
+    folder_name = os.path.join(desktop_path, f'simulation_{R_in_CGS}_{V_in_CGS}_{round(Bo, 5)}_{round(We, 5)}_{round(Oh, 5)}')
 
     # Create the main directory if it does not exist
     if not os.path.exists(desktop_path):
@@ -870,18 +918,18 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
+    #units
+    unit_length_in_CGS = R_in_CGS
+    unit_time_in_CGS = np.sqrt(rho_in_CGS*R_in_CGS**3/sigma_in_CGS)
+    unit_mass_in_CGS = rho_in_CGS*R_in_CGS**3
 
     if Bond == None and Web == None:
         V = -np.sqrt(We)
         H = 1 #H_in_CGS/unit_length_in_CGS
+
     else:
         #Initial height
         H_in_CGS = R_in_CGS
-
-        #units
-        unit_length_in_CGS = R_in_CGS
-        unit_time_in_CGS = np.sqrt(rho_in_CGS*R_in_CGS**3/sigma_in_CGS)
-        unit_mass_in_CGS = rho_in_CGS*R_in_CGS**3
 
         #Dimensionless initial conditions
         V = -np.sqrt(We)
@@ -900,49 +948,50 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
     all_v_list = simulation_results[4]
     all_m_list = simulation_results[5]
     all_north_poles_list = simulation_results[6]
-    all_south_poles_list = simulation_results[7]
+    #all_south_poles_list = simulation_results[7]
     all_maximum_radii_list = simulation_results[8]
-    all_times_list = simulation_results[9]
+    all_times_list_original = simulation_results[9]
+    all_times_list = all_times_list_original[: len(all_m_list)]
 
 
     #Reshaping lists to arrays for easier storing in CSV files
-    amps_array = np.hstack(np.asarray(all_amps_list))
+    all_amps_array = np.hstack(np.asarray(all_amps_list))
     all_amps_vel_array = np.hstack(np.asarray(all_amps_vel_list))
     all_press_array = (np.hstack(np.asarray(all_press_list)))
     all_h_array = (np.asarray(all_h_list)).reshape(len(all_h_list), 1)
     all_v_array = (np.asarray(all_v_list)).reshape(len(all_v_list), 1)
     all_m_array = (np.asarray(all_m_list)).reshape(len(all_m_list), 1)
-    all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
-    all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
-    all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
+    # all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
+    # all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
+    # all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
     all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
 
 
     #Calculating other variables
-    coef_rest = coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[0]
-    
-    contact_time_nd = coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[1]
-    contact_time_ind = coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[2]
-
-    min_north_pole_nd = min_north_pole_height(all_north_poles_list, all_times_list)[0]
-    time_min_north_pole_nd = min_north_pole_height(all_north_poles_list, all_times_list)[1]
-
+    center_coef_rest = center_coefficient_of_restitution(all_v_list, all_m_list)
+    alpha_coef_rest = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[0]
+    contact_time_nd = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[1]
+    print("coef rests:", center_coef_rest, alpha_coef_rest)
+    contact_time_ind = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[2]
+    min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[0]
+    time_min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[1]
     max_radius_nd = max_radius_over_t(all_maximum_radii_list, contact_time_ind, all_times_list)[0]
     time_max_radius_nd = max_radius_over_t(all_maximum_radii_list, contact_time_ind, all_times_list)[1]
-
     max_contact_radius_nd = maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec)[0]
     time_max_contact_radius_nd = maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec)[1]
-
     max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[0]
     time_max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[1]
-
     min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[0]
     time_min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[1]
     print("Done with Coefficient of Restitution, Contact Time, Maximum Contact Radius")
 
-    contact_time_cgs = contact_time_nd*unit_time_in_CGS
-    min_north_pole_cgs = min_north_pole_nd*R_in_CGS
-    time_min_north_pole_cgs = time_min_north_pole_nd*unit_time_in_CGS
+    if contact_time_nd is not None:
+        contact_time_cgs = contact_time_nd*unit_time_in_CGS
+        print(contact_time_cgs)
+    else:
+        contact_time_cgs = None
+    min_north_pole_h_cgs = min_north_pole_h_nd*R_in_CGS
+    time_min_north_pole_h_cgs = time_min_north_pole_h_nd*unit_time_in_CGS
     max_radius_cgs = max_radius_nd*R_in_CGS
     time_max_radius_cgs = time_max_radius_nd*unit_time_in_CGS
     max_contact_radius_cgs = max_contact_radius_nd*R_in_CGS
@@ -953,11 +1002,12 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
     time_min_side_h_cgs = time_min_side_h_nd*unit_time_in_CGS
 
 
-    #Creating heights, radius and amplitudes plots and saving them
-    height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
-    maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
-    amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
-    print("Done with  Plots")
+
+    # #Creating heights, radius and amplitudes plots and saving them
+    # height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
+    # maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
+    # amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
+    # print("Done with  Plots")
 
     #tend = 100
     #simulation_time = np.linspace(0, tend, tend + 1)
@@ -967,9 +1017,9 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
     # Save results to CSV
     csv_file = os.path.join(desktop_path, 'simulation_results.csv')
     csv_header = ['R_in_CGS', 'V_in_CGS', 
-                  'Bo', 'We', 'Oh'
-                  'Coefficient of restitution', 
-                  'Contact rime ND', 'Contact rime CGS',
+                  'Bo', 'We', 'Oh',
+                  "Alpha Coefficient of restitution", "Center Coefficient of restitution", 
+                  'Contact time ND', 'Contact time CGS',
                   'Min north pole height ND', 'Min north pole height CGS',
                   'Time min north pole height ND', 'Time min north pole height CGS',
                   'Max radius ND', 'Max radius CGS',
@@ -990,10 +1040,10 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
             writer.writerow(csv_header)
         writer.writerow([R_in_CGS, V_in_CGS,
                         Bo, We, Oh, 
-                        coef_rest, 
+                        alpha_coef_rest, center_coef_rest,
                         contact_time_nd, contact_time_cgs,
-                        min_north_pole_nd, min_north_pole_cgs,
-                        time_min_north_pole_nd, time_min_north_pole_cgs,
+                        min_north_pole_h_nd, min_north_pole_h_cgs,
+                        time_min_north_pole_h_nd, time_min_north_pole_h_cgs,
                         max_radius_nd, max_radius_cgs,
                         time_max_radius_nd, time_max_radius_cgs,
                         max_contact_radius_nd, max_contact_radius_cgs,
@@ -1005,17 +1055,17 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, g_in_CGS, R_in_CGS, V_in_CGS, T_end,
 
 
     amps_file = os.path.join(folder_name, 'all_amps.csv')
-    np.savetxt(amps_file, np.transpose(amps_array), delimiter=',')
+    np.savetxt(amps_file, np.transpose(all_amps_array), delimiter=',')
     amps_vel_file = os.path.join(folder_name, 'all_amps_vel.csv')
     np.savetxt(amps_vel_file, np.transpose(all_amps_vel_array), delimiter=',')
     press_file = os.path.join(folder_name, 'all_press.csv')
     np.savetxt(press_file, np.transpose(all_press_array), delimiter=',')
 
 
-    concatenated_array = np.hstack((all_times_array, all_h_array, all_v_array, all_m_array, all_north_poles_array, all_south_poles_array, all_max_radii_array))
+    concatenated_array = np.hstack((all_times_array, all_h_array, all_v_array, all_m_array)) #, all_north_poles_array, all_south_poles_array, all_max_radii_array))
 
     csv_file = os.path.join(folder_name, 'simulation_results_extra.csv')
-    csv_header = ['Times', 'H', 'V', 'M', 'North Pole', 'South Pole', 'Maximum Radius at t']
+    csv_header = ['Times', 'H', 'V', 'M'] #, 'North Pole', 'South Pole', 'Maximum Radius at t']
 
     file_exists = os.path.isfile(csv_file)
 
