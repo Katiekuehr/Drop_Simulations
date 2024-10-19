@@ -900,6 +900,9 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
         We = rho_in_CGS*V_in_CGS**2*R_in_CGS/sigma_in_CGS
     else:
         We = Web
+
+    if V_in_CGS == None:
+        V_in_CGS = np.sqrt((Web*sigma_in_CGS)/(rho_in_CGS*R_in_CGS))
     
     if Ohn == None:
         Oh = nu_in_GCS * np.sqrt((rho_in_CGS)/(sigma_in_CGS*R_in_CGS))
@@ -907,8 +910,8 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
         Oh = Ohn
 
     print(We, Bo, Oh)
-    desktop_path = os.path.join('Desktop', 'Try')
-    folder_name = os.path.join(desktop_path, f'simulation_{R_in_CGS}_{V_in_CGS}_{round(Bo, 5)}_{round(We, 5)}_{round(Oh, 5)}')
+    desktop_path = os.path.join('01_Simulation_Inertio_Capillary_R=0.04_Web=sweep(_sigma=72_rho=1_gravity=980_modes=40)')
+    folder_name = os.path.join(desktop_path, f'simulation_{R_in_CGS}_{round(V_in_CGS, 4)}_{round(Bo, 2)}_{We}_{round(Oh, 2)}')
 
     # Create the main directory if it does not exist
     if not os.path.exists(desktop_path):
@@ -1078,3 +1081,9 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
 
 
     return["All Files Saved"]
+
+Webers = [0.0001, 0.0002, 0.00045, 0.0007, 0.0012, 0.0023, 0.0047, 0.006, 0.0095, 0.0121, 0.0153, 0.0309, 0.0391, 0.0625, 
+          0.0791, 0.1, 0.1495, 0.199, 0.2485, 0.298, 0.3475, 0.397, 0.4465, 0.496, 0.5455, 0.5949, 0.64, 0.65]
+
+for Web in Webers:
+    plot_and_save(1, 72, 0.01, 980, 0.04, None, 10, 0, Web, 0, 40, 16)
