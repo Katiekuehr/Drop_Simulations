@@ -909,9 +909,15 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     else:
         Oh = Ohn
 
+    rho_kgm = rho_in_CGS*1000
+    vis_pas = nu_in_GCS*rho_in_CGS*10
+    sigma_nm = sigma_in_CGS/1000
+    R_in_m = R_in_CGS/100
+    V_in_ms = V_in_CGS/100
+
     print(We, Bo, Oh)
-    desktop_path = os.path.join('01_Simulation_Inertio_Capillary_R=0.04_Web=sweep(_sigma=72_rho=1_gravity=980_modes=40)')
-    folder_name = os.path.join(desktop_path, f'simulation_{R_in_CGS}_{round(V_in_CGS, 4)}_{round(Bo, 2)}_{We}_{round(Oh, 2)}')
+    desktop_path = os.path.join(f'Mode_Convergence_R={R_in_CGS}_modes={n_thetas}_Web=sweep_Inertio_Capillary)')
+    folder_name = os.path.join(desktop_path, f'simulation_We={We}_modes={n_thetas}')
 
     # Create the main directory if it does not exist
     if not os.path.exists(desktop_path):
@@ -951,10 +957,10 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     all_v_list = simulation_results[4]
     all_m_list = simulation_results[5]
     all_north_poles_list = simulation_results[6]
-    #all_south_poles_list = simulation_results[7]
     all_maximum_radii_list = simulation_results[8]
     all_times_list_original = simulation_results[9]
     all_times_list = all_times_list_original[: len(all_m_list)]
+    #all_south_poles_list = simulation_results[7]
 
 
     #Reshaping lists to arrays for easier storing in CSV files
@@ -964,17 +970,16 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     all_h_array = (np.asarray(all_h_list)).reshape(len(all_h_list), 1)
     all_v_array = (np.asarray(all_v_list)).reshape(len(all_v_list), 1)
     all_m_array = (np.asarray(all_m_list)).reshape(len(all_m_list), 1)
+    all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
     # all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
     # all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
     # all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
-    all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
 
 
     #Calculating other variables
     center_coef_rest = center_coefficient_of_restitution(all_v_list, all_m_list)
     alpha_coef_rest = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[0]
     contact_time_nd = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[1]
-    print("coef rests:", center_coef_rest, alpha_coef_rest)
     contact_time_ind = alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_times_list, Bo, We)[2]
     min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[0]
     time_min_north_pole_h_nd = min_north_pole_height(all_north_poles_list, all_times_list)[1]
@@ -986,11 +991,103 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     time_max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[1]
     min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[0]
     time_min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[1]
+    print("coef rests:", center_coef_rest, alpha_coef_rest)
     print("Done with Coefficient of Restitution, Contact Time, Maximum Contact Radius")
 
+
+    #PLOTS AND VIDEOS
+    # #Creating heights, radius and amplitudes plots and saving them
+    # height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
+    # maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
+    # amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
+    # print("Done with  Plots")
+
+    #tend = 100
+    #simulation_time = np.linspace(0, tend, tend + 1)
+    #speeds = 50
+    #drop_simulation(all_amps_list, all_h_list, simulation_time, speeds, os.path.join(folder_name, 'droplet_simulation.gif'), all_m_list, n_thetas, 0, 0, 0)
+    #pressure_simulation(all_press_list, simulation_time, speeds, 'pressure_simulation.gif', n_thetas, 0)
+    # Save results to CSV
+
+    # #CHASE COMPARISON SIMULATIONS ORDER:
+
+    # #metric & second conversion
+    # if contact_time_nd is not None:
+    #     contact_time_cgs = contact_time_nd*unit_time_in_CGS
+    #     print(contact_time_cgs)
+    # else:
+    #     contact_time_cgs = None
+    # time_min_north_pole_h_cgs = time_min_north_pole_h_nd*unit_time_in_CGS
+    # time_max_radius_cgs = time_max_radius_nd*unit_time_in_CGS
+    # time_max_contact_radius_cgs = time_max_contact_radius_nd*unit_time_in_CGS
+    # time_max_radial_project_cgs = time_max_radial_project_nd*unit_time_in_CGS
+    # time_min_side_h_cgs = time_min_side_h_nd*unit_time_in_CGS
+    # min_north_pole_h_m = (min_north_pole_h_nd*R_in_CGS)/100
+    # max_radius_m = (max_radius_nd*R_in_CGS)/100
+    # max_contact_radius_m = (max_contact_radius_nd*R_in_CGS)/100
+    # max_radial_project_m = (max_radial_project_nd*R_in_CGS)/100
+    # min_side_h_m = (min_side_h_nd*R_in_CGS)/100
+
+    # csv_file = os.path.join(desktop_path, 'simulation_results.csv')
+    # csv_header = ['rho (kg/m3)', "mu (Pas)", "sigma N/m",
+    #               'R_in_m', 'V_in_ms', 
+    #               'We', 'Bo', 'Oh', "n_thetas",
+    #               'Contact time s',
+    #               'Max contact radius (m)',
+    #               'Max radial projection (m)',
+    #               'Min side height (m)',
+    #               'Min north pole height (m)',
+    #               'Time max radial projection (s))',
+    #               'Time max contact radius (s)',
+    #               "Alpha Coefficient of restitution", "Center Coefficient of restitution", 
+    #               "___________",
+    #               'Contact time ND',
+    #               'Max contact radius ND', 
+    #               'Max radial projection ND', 
+    #               'Min side height ND', 
+    #               'Min north pole height ND', 
+    #               'Time max radial projection ND', 
+    #               'Time max contact radius ND', 
+    #               'Time min north pole height ND', 'Time min north pole height (s)',
+    #               'Max radius ND', 'Max radius (m)',
+    #               'Time of max radius ND', 'Time of max radius (s)',
+    #               'Time min side height ND', 'Time min side height (s)' 
+    #               ]
+
+    # file_exists = os.path.isfile(csv_file)
+
+    # with open(csv_file, mode='a', newline='') as file:
+    #     writer = csv.writer(file)
+    #     if not file_exists:
+    #         writer.writerow(csv_header)
+    #     writer.writerow([rho_kgm, vis_pas, sigma_nm,
+    #                     R_in_m, V_in_ms,
+    #                     We, Bo, Oh, n_thetas,
+    #                     contact_time_cgs,
+    #                     max_contact_radius_m,
+    #                     max_radial_project_m,
+    #                     min_side_h_m,
+    #                     min_north_pole_h_m,
+    #                     time_max_radial_project_cgs,
+    #                     time_max_contact_radius_cgs,
+    #                     alpha_coef_rest, center_coef_rest,
+    #                     "________",
+    #                     contact_time_nd,
+    #                     max_contact_radius_nd,
+    #                     max_radial_project_nd,
+    #                     min_side_h_nd,
+    #                     min_north_pole_h_nd,
+    #                     time_max_radial_project_nd,
+    #                     time_max_contact_radius_nd,
+    #                     time_min_north_pole_h_nd, time_min_north_pole_h_cgs,
+    #                     max_radius_nd, max_radius_m,
+    #                     time_max_radius_nd, time_max_radius_cgs,
+    #                     time_min_side_h_nd, time_min_side_h_cgs])
+
+
+    #ORIGINAL SIMULATIONS ORDER
     if contact_time_nd is not None:
         contact_time_cgs = contact_time_nd*unit_time_in_CGS
-        print(contact_time_cgs)
     else:
         contact_time_cgs = None
     min_north_pole_h_cgs = min_north_pole_h_nd*R_in_CGS
@@ -1004,20 +1101,6 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     min_side_h_cgs = min_side_h_nd*R_in_CGS
     time_min_side_h_cgs = time_min_side_h_nd*unit_time_in_CGS
 
-
-
-    # #Creating heights, radius and amplitudes plots and saving them
-    # height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
-    # maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
-    # amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
-    # print("Done with  Plots")
-
-    #tend = 100
-    #simulation_time = np.linspace(0, tend, tend + 1)
-    #speeds = 50
-    #drop_simulation(all_amps_list, all_h_list, simulation_time, speeds, os.path.join(folder_name, 'droplet_simulation.gif'), all_m_list, n_thetas, 0, 0, 0)
-    #pressure_simulation(all_press_list, simulation_time, speeds, 'pressure_simulation.gif', n_thetas, 0)
-    # Save results to CSV
     csv_file = os.path.join(desktop_path, 'simulation_results.csv')
     csv_header = ['R_in_CGS', 'V_in_CGS', 
                   'Bo', 'We', 'Oh',
@@ -1082,8 +1165,51 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
 
     return["All Files Saved"]
 
-Webers = [0.0001, 0.0002, 0.00045, 0.0007, 0.0012, 0.0023, 0.0047, 0.006, 0.0095, 0.0121, 0.0153, 0.0309, 0.0391, 0.0625, 
-          0.0791, 0.1, 0.1495, 0.199, 0.2485, 0.298, 0.3475, 0.397, 0.4465, 0.496, 0.5455, 0.5949, 0.64, 0.65]
+def m_to_cgs(R_in_m, rho_kgm, sigma_nm, vis_pas):
+    
+    R_in_CGS = R_in_m*100
+    rho_in_CGS = rho_kgm/1000
+    sigma_in_CGS = sigma_nm*1000 
+    nu_in_GCS = vis_pas/(rho_in_CGS*10)
+    return [R_in_CGS, rho_in_CGS, sigma_in_CGS, nu_in_GCS]
 
-for Web in Webers:
-    plot_and_save(1, 72, 0.01, 980, 0.04, None, 10, 0, Web, 0, 40, 16)
+#Chase Parameters 1:
+# desktop_path = os.path.join(f'01_Exp_Comp_R={round(R_in_m, 6)}_Web=sweep_sigma={round(sigma_nm, 6)}_rho={round(rho_kgm, 6)}_vis={round(vis_pas, 6)}_modes={n_thetas})')
+# Webers_low = np.logspace(-6, -1, 20)
+# Webers_med = np.linspace(0.1, 0.7, 20)
+# R_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[0]
+# rho_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[1]
+# sigma_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[2]
+# nu_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[3]
+# print(R_in_CGS, rho_in_CGS, sigma_in_CGS, nu_in_CGS)
+
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 20, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 40, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 80, 16)
+
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 20, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 40, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 80, 16)
+
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 20, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 40, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 80, 16)
+
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 20, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 40, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 80, 16)
+
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 20, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 40, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 80, 16)
+
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 20, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 40, 16)
+# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 80, 16)
+
+plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 100, 16)
+plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 100, 16)
+plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 100, 16)
+plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 100, 16)
+plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 100, 16)
+#plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 60, 16)
