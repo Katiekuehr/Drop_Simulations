@@ -12,14 +12,14 @@ To run video animations in `drop_simulation()` and `pressure_simulation()`, it i
 
 
 
-## Installing FFmpeg
+### Installing FFmpeg
 
 This project requires **FFmpeg** to save or render movie simulations.  
 Please install FFmpeg according to your operating system:
 
 ---
 
-### Windows
+**Windows**
 1. Download FFmpeg from the [official website](https://ffmpeg.org/download.html).
    - Under "Windows", choose a build from sites like Gyan.dev or BtbN.
 2. Extract the downloaded `.zip` file.
@@ -30,7 +30,8 @@ Please install FFmpeg according to your operating system:
    ffmpeg -version
    ```
 
-### macO
+**macOS**
+
 If you have Homebrew installed, run:
 ```bash
    brew install ffmpeg
@@ -44,7 +45,8 @@ If you don't have Homebrew installed, you can install it first by running:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-### Linux (Ubuntu/Debian)
+**Linux (Ubuntu/Debian)**
+
 Update your package list and install FFmpeg:
 ```bash
 sudo apt update
