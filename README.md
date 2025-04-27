@@ -5,7 +5,8 @@ This repository provides a python version of the MATLAB scripts from [this repos
 The project models the complex behavior of liquid droplets when they impact solid surfaces, capturing phenomena like maximum spreading, bounce optimization, energy transfer, and shape deformation using a numerical approach based on spherical harmonics and Newton-Raphson methods. It includes simulation sweeps for parameter exploration such as Weber number (`We`), Bond number (`Bo`), and Ohnesorge number (`Oh`).
 
 # Python Code
-You can run simulations in bulk or individually. 
+Simulations can be run in bulk sweeps or individually. 
+
 ## For Simulation Sweeps
 To perform simulation sweeps, use the [drop_simulations_sweep.py](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_sweep.py) script. 
 
