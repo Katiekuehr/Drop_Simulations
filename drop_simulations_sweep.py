@@ -13,7 +13,6 @@ import matplotlib.colors as mcolors
 import os
 import csv
 
-
 def Legendre(x, n, n_thetas):  #Define Legendre Polynomial of cosine
     """
     Function that evaluates nth Legendre polynomial at x with a scipy function eval_legendre.
@@ -30,7 +29,7 @@ def Legendre(x, n, n_thetas):  #Define Legendre Polynomial of cosine
         #To avoid numerical errors very close to zero
         value = 0
     else:
-      value = eval_legendre(n, x)
+        value = eval_legendre(n, x)
     return value
 
 def matrix(delta_t,q,n_thetas,cos_theta_vec,Oh): #define function for matrix
@@ -55,9 +54,9 @@ def matrix(delta_t,q,n_thetas,cos_theta_vec,Oh): #define function for matrix
                             np.zeros((n_thetas-1,n_thetas+1)),
                             np.zeros((n_thetas-1,1)),
                             np.zeros((n_thetas-1,1))
-                           ),
-                           1
-                          )
+                            ),
+                            1
+                            )
     #Second Block Row
     C_list = [((l - 1) * (l) * (l + 2)) for l in range(2, n_thetas+1)]
     C_mat = np.diag(C_list)
@@ -71,73 +70,73 @@ def matrix(delta_t,q,n_thetas,cos_theta_vec,Oh): #define function for matrix
                                             delta_t*E_mat,
                                             np.zeros((n_thetas-1,1)),
                                             np.zeros((n_thetas-1,1))
-                                           ),
-                                           1
-                                          )
+                                            ),
+                                            1
+                                            )
     M_mat = np.concatenate((M_mat,
                             second_block_row),
-                           0
-                          )
+                            0
+                            )
     #Third and fourth rows of blocks
     FH_mat = np.zeros((n_thetas+1,n_thetas+1))
     for ind_angle in range(n_thetas+1):
-      for ind_poly in range(n_thetas+1):
-        FH_mat[ind_angle,ind_poly] = Legendre(cos_theta_vec[ind_angle],ind_poly,n_thetas)
+        for ind_poly in range(n_thetas+1):
+            FH_mat[ind_angle,ind_poly] = Legendre(cos_theta_vec[ind_angle],ind_poly,n_thetas)
     F_mat = FH_mat[0:q,2:]
     H_mat = FH_mat[q:,:]
     G_vec = np.transpose([-1/cos_theta_vec[0:q]])
     third_block_row = np.concatenate((F_mat,
-                                      np.zeros((q,n_thetas-1)),
-                                      np.zeros((q,n_thetas+1)),
-                                      G_vec,
-                                      np.zeros((q,1))
-                                     ),
-                                     1
-                                    )
+                                        np.zeros((q,n_thetas-1)),
+                                        np.zeros((q,n_thetas+1)),
+                                        G_vec,
+                                        np.zeros((q,1))
+                                        ),
+                                        1
+                                        )
     fourth_block_row = np.concatenate((np.zeros((n_thetas+1-q,n_thetas-1)),
-                                       np.zeros((n_thetas+1-q,n_thetas-1)),
-                                       H_mat,
-                                       np.zeros((n_thetas+1-q,1)),
-                                       np.zeros((n_thetas+1-q,1))
-                                      ),
-                                      1
-                                     )
+                                        np.zeros((n_thetas+1-q,n_thetas-1)),
+                                        H_mat,
+                                        np.zeros((n_thetas+1-q,1)),
+                                        np.zeros((n_thetas+1-q,1))
+                                        ),
+                                        1
+                                    )
     M_mat = np.concatenate((M_mat,
                             third_block_row,
                             fourth_block_row
-                           ),
-                           0
-                          )
+                            ),
+                            0
+                            )
     #fifth block row
     fifth_block_row = np.concatenate((np.zeros((1,n_thetas-1)),
-                                      np.zeros((1,n_thetas-1)),
-                                      np.zeros((1,n_thetas+1)),
-                                      [[1]],
-                                      [[-delta_t]]
-                                     ),
-                                     1
+                                        np.zeros((1,n_thetas-1)),
+                                        np.zeros((1,n_thetas+1)),
+                                        [[1]],
+                                        [[-delta_t]]
+                                        ),
+                                        1
                                     )
     M_mat = np.concatenate((M_mat,
                             fifth_block_row
-                           ),
-                           0
-                          )
+                            ),
+                            0
+                        )
     #sixth row of blocks
     K = np.zeros((1,n_thetas+1))
     K[0,1] = -1
     sixth_block_row = np.concatenate((np.zeros((1,n_thetas-1)),
-                                      np.zeros((1,n_thetas-1)),
-                                      delta_t*K,
-                                      [[0]],
-                                      [[1]]
-                                     ),
-                                     1
+                                        np.zeros((1,n_thetas-1)),
+                                        delta_t*K,
+                                        [[0]],
+                                        [[1]]
+                                        ),
+                                        1
                                     )
     M_mat = np.concatenate((M_mat,
                             sixth_block_row
-                           ),
-                           0
-                          )
+                            ),
+                            0
+                        )
     return M_mat
 
 def error(amplitudes_vec, h, q, n_thetas, cos_theta_vec): #Defining the Error function
@@ -158,20 +157,20 @@ def error(amplitudes_vec, h, q, n_thetas, cos_theta_vec): #Defining the Error fu
         return np.inf
 
     if q == 0:
-      all_verticals_list = []
-      for ind_theta in range(n_thetas+1):
-          cos_theta = cos_theta_vec[ind_theta]
-          height = ((1
-                     + np.sum([amplitudes_vec[l]*Legendre(cos_theta, l+2, n_thetas) for l in range(n_thetas-1)])
-                    )
+        all_verticals_list = []
+        for ind_theta in range(n_thetas+1):
+            cos_theta = cos_theta_vec[ind_theta]
+            height = ((1
+                        + np.sum([amplitudes_vec[l]*Legendre(cos_theta, l+2, n_thetas) for l in range(n_thetas-1)])
+                        )
                     *cos_theta
-                   )
-          all_verticals_list.append(height)
+                    )
+            all_verticals_list.append(height)
 
-      for vertical in all_verticals_list: #Checking whether droplet crosses surface (physically impossible)
-        if vertical > h:
-          return np.inf
-      return 0 #Else, not in contact
+        for vertical in all_verticals_list: #Checking whether droplet crosses surface (physically impossible)
+            if vertical > h:
+                return np.inf
+            return 0 #Else, not in contact
 
     #Variables to store sums
     sum_q = 1
@@ -182,12 +181,12 @@ def error(amplitudes_vec, h, q, n_thetas, cos_theta_vec): #Defining the Error fu
     cos_theta_q_plus_1 = cos_theta_vec[q]
 
     for ind_poly in range(n_thetas-1):
-      sum_q += (amplitudes_vec[ind_poly]
+        sum_q += (amplitudes_vec[ind_poly]
                 *Legendre(cos_theta_q,ind_poly+2, n_thetas)
-               )
-      sum_qp1 += (amplitudes_vec[ind_poly]
+                )
+        sum_qp1 += (amplitudes_vec[ind_poly]
                   *Legendre(cos_theta_q_plus_1,ind_poly+2, n_thetas)
-                 )
+                    )
     #Calculating the vertical components of each point
     vertical_q = sum_q * cos_theta_q
     vertical_qp1 = sum_qp1 * cos_theta_q_plus_1
@@ -196,118 +195,118 @@ def error(amplitudes_vec, h, q, n_thetas, cos_theta_vec): #Defining the Error fu
     err1 = np.abs(vertical_q - vertical_qp1)
     err2 = 0 #Err2 for checking whether droplet crosses surface (physically impossible)
     for ind_theta in range(q,n_thetas+1):
-      rad = 1
-      for ind_poly in range(2,n_thetas+1):
-        rad += (amplitudes_vec[ind_poly-2]
+        rad = 1
+        for ind_poly in range(2,n_thetas+1):
+            rad += (amplitudes_vec[ind_poly-2]
                 *Legendre(cos_theta_vec[ind_theta],ind_poly,n_thetas)
-               )
-      if rad*cos_theta_vec[ind_theta]>(h):
-        err2 = np.inf
+                    )
+        if rad*cos_theta_vec[ind_theta]>(h):
+            err2 = np.inf
         break
+    
     err = np.max([err1,[err2]]) #Return highest error
-
     return err
 
 def try_q(amps_prev_vec, amps_vel_prev_vec, h_prev, v_prev, q, delta_t, n_thetas, Bo, Oh):
 
-  """
-  Function that "tries" q contact points by solving the system of equations.
+    """
+    Function that "tries" q contact points by solving the system of equations.
 
-  Inputs:
-  amps_prev_vec (vector): Vector of amplitudes at the previous time (k).
-  amps_vel_prev_vec (vector): Vector of velocities of amplitudes at the previous time (k).
-  h_prev (float): Height of the center of mass at the previous time (k).
-  v_prev (float): Velocity of the center of mass at the previous time (k).
-  delta_t (float): Time step (in non-dimensional time).
-  q (int): Number of guessed contact points.
-  n_thetas (int): Total number of sampled angles.
-  Bo (float): Bond (non-dimensional gravity).
+    Inputs:
+    amps_prev_vec (vector): Vector of amplitudes at the previous time (k).
+    amps_vel_prev_vec (vector): Vector of velocities of amplitudes at the previous time (k).
+    h_prev (float): Height of the center of mass at the previous time (k).
+    v_prev (float): Velocity of the center of mass at the previous time (k).
+    delta_t (float): Time step (in non-dimensional time).
+    q (int): Number of guessed contact points.
+    n_thetas (int): Total number of sampled angles.
+    Bo (float): Bond (non-dimensional gravity).
 
-  Outputs:
-  sol_vec (vector): Vector of the solution of matrix at q contact points at time k+1
-  err (float): Error at k+1 with q contact points.
+    Outputs:
+    sol_vec (vector): Vector of the solution of matrix at q contact points at time k+1
+    err (float): Error at k+1 with q contact points.
 
-  """
-  #Extracting samling angles
-  roots, weights = roots_legendre(n_thetas)
-  cos_theta_vec = np.concatenate(([1], np.flip(roots)))
-  q_last = np.argmax(cos_theta_vec <= 0)
+    """
+    #Extracting samling angles
+    roots, weights = roots_legendre(n_thetas)
+    cos_theta_vec = np.concatenate(([1], np.flip(roots)))
+    q_last = np.argmax(cos_theta_vec <= 0)
 
-  #Running through different guesses of q
-  if q < 0: #Return previous matrix and infinite error for physically impossible case
-    sol_vec = np.concatenate((amps_prev_vec,
-                              amps_vel_prev_vec,
-                              np.zeros((n_thetas+1,1)),
-                              h_prev,
-                              v_prev
-                             ),
-                             0
-                            )
-    err = np.inf
+    #Running through different guesses of q
+    if q < 0: #Return previous matrix and infinite error for physically impossible case
+        sol_vec = np.concatenate((amps_prev_vec,
+                                amps_vel_prev_vec,
+                                np.zeros((n_thetas+1,1)),
+                                h_prev,
+                                v_prev
+                                ),
+                                0
+                                )
+        err = np.inf
 
-  elif q == 0: #Only solve necessary parts of the matrix (no contact and pressure block-rows)
-    #Right-hand side for mode equations
-    RHS_modes_vec = np.concatenate((amps_prev_vec,
-                                    amps_vel_prev_vec
-                                   ),
-                                   0
-                                  )
-    #Right-hand side for cm equations
-    RHS_h_vec = np.concatenate((h_prev,
+    elif q == 0: #Only solve necessary parts of the matrix (no contact and pressure block-rows)
+        #Right-hand side for mode equations
+        RHS_modes_vec = np.concatenate((amps_prev_vec,
+                                        amps_vel_prev_vec
+                                    ),
+                                    0
+                                    )
+        #Right-hand side for cm equations
+        RHS_h_vec = np.concatenate((h_prev,
+                                    v_prev-(delta_t*Bo)
+                                ),
+                                0
+                                )
+
+        #Extracting parts of the matrices for modes and cm
+        M_modes_mat = matrix(delta_t, q, n_thetas,cos_theta_vec,Oh)[: int(n_thetas*2-2), : int(n_thetas*2-2)]
+        M_h_mat = matrix(delta_t, q, n_thetas,cos_theta_vec,Oh)[-2:,-2:]
+
+        #Solving systems of equations
+        sol_modes_vec = solve(M_modes_mat, RHS_modes_vec)
+        sol_h_vec = solve(M_h_mat, RHS_h_vec)
+        sol_vec = np.concatenate((sol_modes_vec,
+                                    np.zeros((n_thetas+1,1)),
+                                    sol_h_vec
+                                    ),
+                                    0
+                                )
+
+        #Calculating the error at k+1, q=0
+        err = error(sol_modes_vec[: n_thetas-1],
+                    sol_h_vec[0],
+                    q, 
+                    n_thetas,
+                    cos_theta_vec)
+
+    elif q <= q_last: #Solving the full matrix with guessed contact points
+        RHS_vec = np.concatenate((amps_prev_vec,
+                                amps_vel_prev_vec,
+                                -np.ones((q,1)),
+                                np.zeros((n_thetas+1-q,1)),
+                                h_prev,
                                 v_prev-(delta_t*Bo)
-                               ),
-                               0
-                              )
+                                ),
+                                0
+                                )
+        M_mat = (matrix(delta_t, q, n_thetas, cos_theta_vec,Oh))
+        sol_vec = (solve(M_mat, RHS_vec))
 
-    #Extracting parts of the matrices for modes and cm
-    M_modes_mat = matrix(delta_t, q, n_thetas,cos_theta_vec,Oh)[: int(n_thetas*2-2), : int(n_thetas*2-2)]
-    M_h_mat = matrix(delta_t, q, n_thetas,cos_theta_vec,Oh)[-2:,-2:]
+        #Calculating the error at k+1, q
+        err = error(sol_vec[: n_thetas-1], sol_vec[-2], q, n_thetas, cos_theta_vec)
 
-    #Solving systems of equations
-    sol_modes_vec = solve(M_modes_mat, RHS_modes_vec)
-    sol_h_vec = solve(M_h_mat, RHS_h_vec)
-    sol_vec = np.concatenate((sol_modes_vec,
-                              np.zeros((n_thetas+1,1)),
-                              sol_h_vec
-                             ),
-                            0
-                           )
+    else: #Assumptions of little deformation in the model do not allow for this case; returns sample matrix and infinite error
+        sol_vec = np.concatenate((amps_prev_vec,
+                                amps_vel_prev_vec,
+                                np.zeros((n_thetas+1,1)),
+                                h_prev,
+                                v_prev
+                                ),
+                                0
+                                )
+        err = np.inf
 
-    #Calculating the error at k+1, q=0
-    err = error(sol_modes_vec[: n_thetas-1],
-                sol_h_vec[0],
-                q, 
-                n_thetas,
-                cos_theta_vec)
-
-  elif q <= q_last: #Solving the full matrix with guessed contact points
-    RHS_vec = np.concatenate((amps_prev_vec,
-                              amps_vel_prev_vec,
-                              -np.ones((q,1)),
-                              np.zeros((n_thetas+1-q,1)),
-                              h_prev,
-                              v_prev-(delta_t*Bo)
-                             ),
-                             0
-                            )
-    M_mat = (matrix(delta_t, q, n_thetas, cos_theta_vec,Oh))
-    sol_vec = (solve(M_mat, RHS_vec))
-
-    #Calculating the error at k+1, q
-    err = error(sol_vec[: n_thetas-1], sol_vec[-2], q, n_thetas, cos_theta_vec)
-
-  else: #Assumptions of little deformation in the model do not allow for this case; returns sample matrix and infinite error
-    sol_vec = np.concatenate((amps_prev_vec,
-                              amps_vel_prev_vec,
-                              np.zeros((n_thetas+1,1)),
-                              h_prev,
-                              v_prev
-                             ),
-                             0
-                            )
-    err = np.inf
-
-  return (sol_vec, err)
+    return (sol_vec, err)
 
 def height_poles(all_amps_vec, h, n_thetas):
 
@@ -838,7 +837,7 @@ def amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thet
     plt.ylabel("Amplitude")
     plt.xlabel("Non-Dimensional Time")
 
-     # Create a ScalarMappable and add a colorbar
+    # Create a ScalarMappable and add a colorbar
     norm = mcolors.Normalize(vmin=2, vmax=n_thetas)
     sm = cm.ScalarMappable(cmap=cm.viridis, norm=norm)
     sm.set_array([])  # Only needed for older versions of Matplotlib
@@ -853,7 +852,7 @@ def amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thet
     plt.close()
     return plot_path
 
-def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_CGS, T_end, Bond, Web, Ohn, n_thetas, n_sampling_time_L_mode):
+def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time_L_mode=16, Bond=None, Web=None, Ohn=None, rho_in_CGS=None, sigma_in_CGS=None, nu_in_GCS=None, V_in_CGS=None):
 
     """
     Function that runs the simulation and saves all results and plots to a designated path on your computer.
@@ -864,20 +863,19 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     T_end (int): Duration of Simulation (in non-dimensional-time).
 
     either:
-    rho_in_CGS (float): Density of chosen liquid in g/cm^3.
-    sigma_in_CGS (float): Surface tension of chosen liquid in dyne/cm.
-    nu_in_GCS (float): in cm^2/s.
+    rho_in_CGS (float): Density of chosen liquid in g/cm^3. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
+    sigma_in_CGS (float): Surface tension of chosen liquid in dyne/cm. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
+    nu_in_GCS (float): in cm^2/s. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
     g_in_CGS (float): Gravity in cm/s^2.
     R_in_CGS (float): Radius of droplet in cm.
-    V_in_CGS (float): Velocity of the droplet's center of mass in cm/s.
-    (and Bond & Web = None).
+    V_in_CGS (float): Velocity of the droplet's center of mass in cm/s. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
 
     or:
-    Bond (float): Bond number, non-dimensional gravity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and g_in_CGS: input: None.
+    Bond (float): Bond number, non-dimensional gravity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and g_in_CGS, ignore.
         If want to set it to 0: Input 0
-    Web (float): Weber number, non-dimensional velocity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and V_in_CGS: input: None.
+    Web (float): Weber number, non-dimensional velocity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and V_in_CGS, ignore.
         If want to set it to 0: Input 0   
-    Ohn (float): Ohnesorghe number, non-dimensional viscosity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and nu_in_CGS: input: None.
+    Ohn (float): Ohnesorghe number, non-dimensional viscosity. If you want to define from R_in_CGS, sigma_in_CGS, rho_in_CGS, and nu_in_CGS, ignore.
         If want to set it to 0: Input 0
     (and all others = None).
 
@@ -909,15 +907,10 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     else:
         Oh = Ohn
 
-    rho_kgm = rho_in_CGS*1000
-    vis_pas = nu_in_GCS*rho_in_CGS*10
-    sigma_nm = sigma_in_CGS/1000
-    R_in_m = R_in_CGS/100
-    V_in_ms = V_in_CGS/100
-
-    print(We, Bo, Oh)
-    desktop_path = os.path.join(f'Mode_Convergence_R={R_in_CGS}_modes={n_thetas}_Web=sweep_Inertio_Capillary)')
-    folder_name = os.path.join(desktop_path, f'simulation_We={We}_modes={n_thetas}')
+    # Change to a different name/ directory as desired
+    desktop_path = os.path.join(f'Mode_Convergence_R={R_in_CGS}_modes={n_thetas}_Web={We})')
+    # Change if sweeping over Weber
+    folder_name = os.path.join(desktop_path, f'simulation_We={We}_Oh={Oh}_Bo={Bo}_modes={n_thetas}')
 
     # Create the main directory if it does not exist
     if not os.path.exists(desktop_path):
@@ -930,7 +923,6 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     #units
     unit_length_in_CGS = R_in_CGS
     unit_time_in_CGS = np.sqrt(rho_in_CGS*R_in_CGS**3/sigma_in_CGS)
-    unit_mass_in_CGS = rho_in_CGS*R_in_CGS**3
 
     if Bond == None and Web == None:
         V = -np.sqrt(We)
@@ -947,7 +939,6 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
 
     #Running Simulations
     simulation_results = running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo,theta_vec, Oh)
-    print("Done with Simulation")
 
     #Variables to store values of simulation
     all_amps_list = simulation_results[0]
@@ -960,7 +951,7 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     all_maximum_radii_list = simulation_results[8]
     all_times_list_original = simulation_results[9]
     all_times_list = all_times_list_original[: len(all_m_list)]
-    #all_south_poles_list = simulation_results[7]
+    all_south_poles_list = simulation_results[7]
 
 
     #Reshaping lists to arrays for easier storing in CSV files
@@ -971,9 +962,9 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     all_v_array = (np.asarray(all_v_list)).reshape(len(all_v_list), 1)
     all_m_array = (np.asarray(all_m_list)).reshape(len(all_m_list), 1)
     all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
-    # all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
-    # all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
-    # all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
+    all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
+    all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
+    all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
 
 
     #Calculating other variables
@@ -991,105 +982,18 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     time_max_radial_project_nd = max_radial_projection(all_amps_list, n_thetas, all_times_list, theta_vec)[1]
     min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[0]
     time_min_side_h_nd = min_side_height(all_amps_list, n_thetas, all_times_list, all_h_list, theta_vec)[1]
-    print("coef rests:", center_coef_rest, alpha_coef_rest)
-    print("Done with Coefficient of Restitution, Contact Time, Maximum Contact Radius")
 
-
-    #PLOTS AND VIDEOS
-    # #Creating heights, radius and amplitudes plots and saving them
-    # height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
-    # maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
-    # amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
-    # print("Done with  Plots")
-
-    #tend = 100
-    #simulation_time = np.linspace(0, tend, tend + 1)
-    #speeds = 50
-    #drop_simulation(all_amps_list, all_h_list, simulation_time, speeds, os.path.join(folder_name, 'droplet_simulation.gif'), all_m_list, n_thetas, 0, 0, 0)
-    #pressure_simulation(all_press_list, simulation_time, speeds, 'pressure_simulation.gif', n_thetas, 0)
+    # Creating heights, radius and amplitudes plots and saving them
+    height_plots(all_north_poles_list, all_south_poles_list, all_h_list, all_times_list, folder_name)
+    maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name)
+    amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thetas)
+    
     # Save results to CSV
-
-    # #CHASE COMPARISON SIMULATIONS ORDER:
-
-    # #metric & second conversion
-    # if contact_time_nd is not None:
-    #     contact_time_cgs = contact_time_nd*unit_time_in_CGS
-    #     print(contact_time_cgs)
-    # else:
-    #     contact_time_cgs = None
-    # time_min_north_pole_h_cgs = time_min_north_pole_h_nd*unit_time_in_CGS
-    # time_max_radius_cgs = time_max_radius_nd*unit_time_in_CGS
-    # time_max_contact_radius_cgs = time_max_contact_radius_nd*unit_time_in_CGS
-    # time_max_radial_project_cgs = time_max_radial_project_nd*unit_time_in_CGS
-    # time_min_side_h_cgs = time_min_side_h_nd*unit_time_in_CGS
-    # min_north_pole_h_m = (min_north_pole_h_nd*R_in_CGS)/100
-    # max_radius_m = (max_radius_nd*R_in_CGS)/100
-    # max_contact_radius_m = (max_contact_radius_nd*R_in_CGS)/100
-    # max_radial_project_m = (max_radial_project_nd*R_in_CGS)/100
-    # min_side_h_m = (min_side_h_nd*R_in_CGS)/100
-
-    # csv_file = os.path.join(desktop_path, 'simulation_results.csv')
-    # csv_header = ['rho (kg/m3)', "mu (Pas)", "sigma N/m",
-    #               'R_in_m', 'V_in_ms', 
-    #               'We', 'Bo', 'Oh', "n_thetas",
-    #               'Contact time s',
-    #               'Max contact radius (m)',
-    #               'Max radial projection (m)',
-    #               'Min side height (m)',
-    #               'Min north pole height (m)',
-    #               'Time max radial projection (s))',
-    #               'Time max contact radius (s)',
-    #               "Alpha Coefficient of restitution", "Center Coefficient of restitution", 
-    #               "___________",
-    #               'Contact time ND',
-    #               'Max contact radius ND', 
-    #               'Max radial projection ND', 
-    #               'Min side height ND', 
-    #               'Min north pole height ND', 
-    #               'Time max radial projection ND', 
-    #               'Time max contact radius ND', 
-    #               'Time min north pole height ND', 'Time min north pole height (s)',
-    #               'Max radius ND', 'Max radius (m)',
-    #               'Time of max radius ND', 'Time of max radius (s)',
-    #               'Time min side height ND', 'Time min side height (s)' 
-    #               ]
-
-    # file_exists = os.path.isfile(csv_file)
-
-    # with open(csv_file, mode='a', newline='') as file:
-    #     writer = csv.writer(file)
-    #     if not file_exists:
-    #         writer.writerow(csv_header)
-    #     writer.writerow([rho_kgm, vis_pas, sigma_nm,
-    #                     R_in_m, V_in_ms,
-    #                     We, Bo, Oh, n_thetas,
-    #                     contact_time_cgs,
-    #                     max_contact_radius_m,
-    #                     max_radial_project_m,
-    #                     min_side_h_m,
-    #                     min_north_pole_h_m,
-    #                     time_max_radial_project_cgs,
-    #                     time_max_contact_radius_cgs,
-    #                     alpha_coef_rest, center_coef_rest,
-    #                     "________",
-    #                     contact_time_nd,
-    #                     max_contact_radius_nd,
-    #                     max_radial_project_nd,
-    #                     min_side_h_nd,
-    #                     min_north_pole_h_nd,
-    #                     time_max_radial_project_nd,
-    #                     time_max_contact_radius_nd,
-    #                     time_min_north_pole_h_nd, time_min_north_pole_h_cgs,
-    #                     max_radius_nd, max_radius_m,
-    #                     time_max_radius_nd, time_max_radius_cgs,
-    #                     time_min_side_h_nd, time_min_side_h_cgs])
-
-
-    #ORIGINAL SIMULATIONS ORDER
     if contact_time_nd is not None:
         contact_time_cgs = contact_time_nd*unit_time_in_CGS
     else:
         contact_time_cgs = None
+        
     min_north_pole_h_cgs = min_north_pole_h_nd*R_in_CGS
     time_min_north_pole_h_cgs = time_min_north_pole_h_nd*unit_time_in_CGS
     max_radius_cgs = max_radius_nd*R_in_CGS
@@ -1103,20 +1007,20 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
 
     csv_file = os.path.join(desktop_path, 'simulation_results.csv')
     csv_header = ['R_in_CGS', 'V_in_CGS', 
-                  'Bo', 'We', 'Oh',
-                  "Alpha Coefficient of restitution", "Center Coefficient of restitution", 
-                  'Contact time ND', 'Contact time CGS',
-                  'Min north pole height ND', 'Min north pole height CGS',
-                  'Time min north pole height ND', 'Time min north pole height CGS',
-                  'Max radius ND', 'Max radius CGS',
-                  'Time of max radius ND', 'Time of max radius CGS',
-                  'Max contact radius ND', 'Max contact radius CGS',
-                  'Time max contact radius ND', 'Time max contact radius CGS',
-                  'Max radial projection ND', 'Max radial projection CGS',
-                  'Time max radial projection ND', 'Time max radial projection CGS',
-                  'Min side height ND', 'Min side height CGS',
-                  'Time min side height ND', 'Time min side height CGS' 
-                  ]
+                    'Bo', 'We', 'Oh',
+                    "Alpha Coefficient of restitution", "Center Coefficient of restitution", 
+                    'Contact time ND', 'Contact time CGS',
+                    'Min north pole height ND', 'Min north pole height CGS',
+                    'Time min north pole height ND', 'Time min north pole height CGS',
+                    'Max radius ND', 'Max radius CGS',
+                    'Time of max radius ND', 'Time of max radius CGS',
+                    'Max contact radius ND', 'Max contact radius CGS',
+                    'Time max contact radius ND', 'Time max contact radius CGS',
+                    'Max radial projection ND', 'Max radial projection CGS',
+                    'Time max radial projection ND', 'Time max radial projection CGS',
+                    'Min side height ND', 'Min side height CGS',
+                    'Time min side height ND', 'Time min side height CGS' 
+                    ]
 
     file_exists = os.path.isfile(csv_file)
 
@@ -1148,7 +1052,7 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
     np.savetxt(press_file, np.transpose(all_press_array), delimiter=',')
 
 
-    concatenated_array = np.hstack((all_times_array, all_h_array, all_v_array, all_m_array)) #, all_north_poles_array, all_south_poles_array, all_max_radii_array))
+    concatenated_array = np.hstack((all_times_array, all_h_array, all_v_array, all_m_array, all_north_poles_array, all_south_poles_array, all_max_radii_array))
 
     csv_file = os.path.join(folder_name, 'simulation_results_extra.csv')
     csv_header = ['Times', 'H', 'V', 'M'] #, 'North Pole', 'South Pole', 'Maximum Radius at t']
@@ -1164,52 +1068,3 @@ def plot_and_save(rho_in_CGS, sigma_in_CGS, nu_in_GCS, g_in_CGS, R_in_CGS, V_in_
 
 
     return["All Files Saved"]
-
-def m_to_cgs(R_in_m, rho_kgm, sigma_nm, vis_pas):
-    
-    R_in_CGS = R_in_m*100
-    rho_in_CGS = rho_kgm/1000
-    sigma_in_CGS = sigma_nm*1000 
-    nu_in_GCS = vis_pas/(rho_in_CGS*10)
-    return [R_in_CGS, rho_in_CGS, sigma_in_CGS, nu_in_GCS]
-
-#Chase Parameters 1:
-# desktop_path = os.path.join(f'01_Exp_Comp_R={round(R_in_m, 6)}_Web=sweep_sigma={round(sigma_nm, 6)}_rho={round(rho_kgm, 6)}_vis={round(vis_pas, 6)}_modes={n_thetas})')
-# Webers_low = np.logspace(-6, -1, 20)
-# Webers_med = np.linspace(0.1, 0.7, 20)
-# R_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[0]
-# rho_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[1]
-# sigma_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[2]
-# nu_in_CGS = m_to_cgs(0.000203, 960,  0.0205, 0.00096)[3]
-# print(R_in_CGS, rho_in_CGS, sigma_in_CGS, nu_in_CGS)
-
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 20, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 40, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 80, 16)
-
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 20, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 40, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 80, 16)
-
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 20, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 40, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 80, 16)
-
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 20, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 40, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 80, 16)
-
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 20, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 40, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 80, 16)
-
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 20, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 40, 16)
-# plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 80, 16)
-
-plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.0001, 0, 100, 16)
-plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.001, 0, 100, 16)
-plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.01, 0, 100, 16)
-plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.2, 0, 100, 16)
-plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.4, 0, 100, 16)
-#plot_and_save(1, 72, 0.01, 980, 0.02, None, 10, 0, 0.6, 0, 60, 16)
