@@ -5,11 +5,14 @@ This repository provides a python version of the MATLAB scripts from [this repos
 The project models the complex behavior of liquid droplets when they impact solid surfaces, capturing phenomena like maximum spreading, bounce optimization, energy transfer, and shape deformation using a numerical approach based on spherical harmonics and Newton-Raphson methods. It includes simulation sweeps for parameter exploration such as Weber number (`We`), Bond number (`Bo`), and Ohnesorge number (`Oh`).
 
 ## Python Code
-### Running Simulations
-You can run simulations in bulk or individually. For individual simulations, use [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb). In "user input" adjust physical constants as desired. $\rho$ = density, $\sigma$ = surface tesnion, $g$ = gravitational acceleration, $nu$ = kinematic viscosity; $R$ = radius, $V$ = initial velocity, $T_{end}$ = non-dimensional time of simulation end, $n_{thetas}$ = number of Legendre Polynomials used for approximation, n\_sampling\_time\_L\_mode: limits size of dimensionless time-step - the larger n\_sampling\_time\_L\_mode, the smaller the timestep.
+You can run simulations in bulk or individually. 
+### Running Simulation Sweep
+For simulation sweeps, use [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb).
 
-To run video animations in `drop_simulation()` and `pressure_simulation()`, it is necessary to gave installed FFmpeg. See below for a guide on how to install FFmpeg. Video simulations will not be saved automatically but require manual downloading for saving.
+### Running Single Simulations
+For individual simulations, use [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb). The simulations will be run in a Jupyter Notebook. Plots and videos will not be automaticall saved but require manual downloading. In "user input" adjust physical constants as desired. $\rho$ = density, $\sigma$ = surface tesnion, $g$ = gravitational acceleration, $nu$ = kinematic viscosity; $R$ = radius, $V$ = initial velocity, $T_{end}$ = non-dimensional time of simulation end, $n_{thetas}$ = number of Legendre Polynomials used for approximation, n\_sampling\_time\_L\_mode: limits size of dimensionless time-step - the larger n\_sampling\_time\_L\_mode, the smaller the timestep.
 
+To run video animations in `drop_simulation()` and `pressure_simulation()`, it is necessary to gave installed FFmpeg. See below for a guide on how to install FFmpeg. 
 
 
 ### Installing FFmpeg
