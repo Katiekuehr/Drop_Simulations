@@ -19,7 +19,7 @@ The function `plot_and_save()` can be called with either **dimensional parameter
 Both `desktop_path` and `folder_name` are automatically created in this structure, with the `folder_name` placed inside `desktop_path`.
 
 **Customizing Folder Locations:**
-To save results to a different location or rename the folder, modify the `desktop_path` and `folder_name` variables to point to the desired folder or path.
+To save results to a different location or rename the folder, modify the `desktop_path` and `folder_name` variables to point to the desired path or folder.
 
 **Sweeping Across Parameters:**
 - When performing a sweep over the Weber number (`We`): Update the `desktop_path` so that it is **independent of `We`**. This ensures that all results from the Weber-sweep are stored in a single folder.
