@@ -7,7 +7,7 @@ The project models the complex behavior of liquid droplets when they impact soli
 ## Python Code
 You can run simulations in bulk or individually. 
 ### Running Simulation Sweep
-For simulation sweeps, use [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb).
+For simulation sweeps, use [drop_simulations_sweep.py](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_sweep.py).
 
 ### Running Single Simulations
 For individual simulations, use [drop_simulations_singular.ipynb](https://github.com/Katiekuehr/Drop_Simulations/blob/main/drop_simulations_singular.ipynb). The simulations will be run in a Jupyter Notebook. Plots and videos will not be automaticall saved but require manual downloading. In "user input" adjust physical constants as desired. $\rho$ = density, $\sigma$ = surface tesnion, $g$ = gravitational acceleration, $nu$ = kinematic viscosity; $R$ = radius, $V$ = initial velocity, $T_{end}$ = non-dimensional time of simulation end, $n_{thetas}$ = number of Legendre Polynomials used for approximation, n\_sampling\_time\_L\_mode: limits size of dimensionless time-step - the larger n\_sampling\_time\_L\_mode, the smaller the timestep.
