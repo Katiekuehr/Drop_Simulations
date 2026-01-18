@@ -30,6 +30,7 @@ def Legendre(x, n, n_thetas):  #Define Legendre Polynomial of cosine
         value = 0
     else:
         value = eval_legendre(n, x)
+
     return value
 
 def matrix(delta_t,q,n_thetas,cos_theta_vec,Oh): #define function for matrix
@@ -329,9 +330,10 @@ def height_poles(all_amps_vec, h, n_thetas):
     south_pole_radius = 1
 
     #Adding deformations from the Legendre modes
-    for i in range(2, n_thetas):
-        north_pole_radius += all_amps_vec[i-2] * Legendre(-1, i, n_thetas)
-        south_pole_radius += all_amps_vec[i-2] * Legendre(1, i, n_thetas)
+    for i in range(2, n_thetas+1):
+        amp = all_amps_vec[i-2].item()
+        north_pole_radius += amp * Legendre(-1, i, n_thetas)
+        south_pole_radius += amp * Legendre(1, i, n_thetas)
 
     #Obtaining height
     north_pole_height = north_pole_radius + h
@@ -359,9 +361,10 @@ def max_radius_at_each_t(all_amps_vec, n_thetas, theta_vec):
     """
 
     radii = np.ones(n_thetas) #Setting radi at all sampled points to an undeformed radius
-    for i in range(2, n_thetas):
+    for i in range(2, n_thetas + 1):
         for ind_angles in range(n_thetas): #Adding deformation
-            radii[ind_angles] += all_amps_vec[i - 2] * Legendre(np.cos(theta_vec[ind_angles]), i, n_thetas)
+            amp = all_amps_vec[i - 2].item()
+            radii[ind_angles] += amp * Legendre(np.cos(theta_vec[ind_angles]), i, n_thetas)
 
     radius_of_largest_deformation = np.max(radii)
     return radius_of_largest_deformation #Returning largest radius
@@ -417,7 +420,8 @@ def alpha_coefficient_of_restitution(all_h_list, all_v_list, all_m_list, all_tim
     coeff_rest_squared = (((Bo * (final_height - 1))
                           + 0.5 * (final_velocity**2))/
                           (0.5 * (We)))
-
+    
+    coeff_rest_squared = coeff_rest_squared.item()
     coeff_rest_squared_float = np.sqrt(np.abs(float(coeff_rest_squared)))
 
 
@@ -446,7 +450,7 @@ def center_coefficient_of_restitution(all_v_list, all_m_list):
     #Averages of last contact and first non-comtact times
     final_velocity = (all_v_list[index] + all_v_list[index-1])/2
     coef_rest = (-final_velocity)/(initial_velocity)
-    return float(coef_rest)
+    return coef_rest.item()
 
 def maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, theta_vec):
 
@@ -470,9 +474,10 @@ def maximum_contact_radius(all_amps_list, all_m_list, all_times_list, n_thetas, 
         if m == 0: #If not in contact, contact area = 0
             contact_radii.append(0)
         else:
-            for i in range(2, n_thetas):
-                radii_vec[0] += all_amps_mat[time, i - 2] * Legendre(np.cos(theta_vec[m-1]), i, n_thetas)
-                radii_vec[1] += all_amps_mat[time, i - 2] * Legendre(np.cos(theta_vec[m]), i, n_thetas)
+            for i in range(2, n_thetas + 1):
+                amp = all_amps_mat[time, i - 2].item()
+                radii_vec[0] += amp * Legendre(np.cos(theta_vec[m-1]), i, n_thetas)
+                radii_vec[1] += amp * Legendre(np.cos(theta_vec[m]), i, n_thetas)
 
             x_1 = radii_vec[0] * np.sin(theta_vec[m-1])
             x_2 = radii_vec[1] * np.sin(theta_vec[m])
@@ -496,9 +501,10 @@ def max_radial_projection(all_amps_list, n_thetas_int, all_times_list, theta_vec
         thetas = np.concatenate((theta_vec,np.array([np.pi])), 0)
         radii = np.ones(len(thetas))
 
-        for ind_amplitude in range(2, n_thetas_int): #Add deformation of every mode at every angle
+        for ind_amplitude in range(2, n_thetas_int + 1): #Add deformation of every mode at every angle
             for ind_angles in range(n_thetas_int):
-                radii[ind_angles] += all_amps_array[time_ind, ind_amplitude - 2] * Legendre(np.cos(thetas[ind_angles]), ind_amplitude, n_thetas_int)
+                amp = all_amps_array[time_ind, ind_amplitude - 2].item()
+                radii[ind_angles] += amp * Legendre(np.cos(thetas[ind_angles]), ind_amplitude, n_thetas_int)
 
         for i in range(len(thetas)):
             horizontal_component = (radii[i] * np.sin(thetas[i]))
@@ -524,9 +530,10 @@ def min_side_height(all_amps_list, n_thetas_int, all_times_list, all_h_list, the
         thetas = np.concatenate((theta_vec,np.array([np.pi])), 0)
         radii = np.ones(len(thetas))
 
-        for ind_amplitude in range(2, n_thetas_int): #Add deformation of every mode at every angle
+        for ind_amplitude in range(2, n_thetas_int + 1): #Add deformation of every mode at every angle
             for ind_angles in range(n_thetas_int):
-                radii[ind_angles] += all_amps_array[time_ind, ind_amplitude - 2] * Legendre(np.cos(thetas[ind_angles]), ind_amplitude, n_thetas_int)
+                amp = all_amps_array[time_ind, ind_amplitude - 2].item()
+                radii[ind_angles] += amp * Legendre(np.cos(thetas[ind_angles]), ind_amplitude, n_thetas_int)
 
         for i in range(len(thetas)):
             y = all_h_list[time_ind] - (radii[i] * np.cos(thetas[i]))
@@ -594,8 +601,8 @@ def running_simulation(n_thetas, n_sampling_time_L_mode, T_end, H, V, Bo, theta_
     all_h_list = [h_prev]
     all_v_list = [v_prev]
     all_m_list = [0]
-    all_north_poles_list = [np.asarray([height_poles(amps_prev_vec, H, n_thetas)[0]])]
-    all_south_poles_list = [np.asarray([height_poles(amps_prev_vec, H, n_thetas)[1]])]
+    all_north_poles_list = [np.asarray([[height_poles(amps_prev_vec, H, n_thetas)[0]]])]
+    all_south_poles_list = [np.asarray([[height_poles(amps_prev_vec, H, n_thetas)[1]]])]
     all_maximum_radii_list = [max_radius_at_each_t(amps_prev_vec, n_thetas, theta_vec)] 
 
     #to stop after lift-off
@@ -800,7 +807,7 @@ def maximum_radius_plot(all_maximum_radii_list, all_times_list, folder_name):
     plt.plot(all_times_list, all_maximum_radii_list)
     plt.ylabel("Maxmum Radius in Non-Dimensional Radii")
     plt.xlabel("Non-Dimensional Time")
-    plt.legend()
+    #plt.legend()
     plot_path = os.path.join(folder_name, 'max_radius_plot.png')
     plt.savefig(plot_path)
     plt.close()
@@ -852,7 +859,7 @@ def amplitudes_over_time_plot(all_amps_list, all_times_list, folder_name, n_thet
     plt.close()
     return plot_path
 
-def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time_L_mode=16, Bond=None, Web=None, Ohn=None, rho_in_CGS=None, sigma_in_CGS=None, nu_in_GCS=None, V_in_CGS=None):
+def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time_L_mode=16, Bond=None, Web=None, Ohn=None, rho_in_CGS=None, sigma_in_CGS=None, nu_in_CGS=None, V_in_CGS=None):
 
     """
     Function that runs the simulation and saves all results and plots to a designated path on your computer.
@@ -865,7 +872,7 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
     either:
     rho_in_CGS (float): Density of chosen liquid in g/cm^3. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
     sigma_in_CGS (float): Surface tension of chosen liquid in dyne/cm. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
-    nu_in_GCS (float): in cm^2/s. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
+    nu_in_CGS (float): in cm^2/s. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
     g_in_CGS (float): Gravity in cm/s^2.
     R_in_CGS (float): Radius of droplet in cm.
     V_in_CGS (float): Velocity of the droplet's center of mass in cm/s. If want to run simulations based on non-dimensional variables (Bo, Oh, We) only, ignore.
@@ -903,7 +910,7 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
         V_in_CGS = np.sqrt((Web*sigma_in_CGS)/(rho_in_CGS*R_in_CGS))
     
     if Ohn == None:
-        Oh = nu_in_GCS * np.sqrt((rho_in_CGS)/(sigma_in_CGS*R_in_CGS))
+        Oh = nu_in_CGS * np.sqrt((rho_in_CGS)/(sigma_in_CGS*R_in_CGS))
     else:
         Oh = Ohn
 
@@ -962,7 +969,9 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
     all_v_array = (np.asarray(all_v_list)).reshape(len(all_v_list), 1)
     all_m_array = (np.asarray(all_m_list)).reshape(len(all_m_list), 1)
     all_times_array = (np.asanyarray(all_times_list)).reshape(len(all_times_list), 1)
-    all_north_poles_array = (np.asarray(all_north_poles_list)).reshape(len(all_north_poles_list), 1)
+    # float_north_poles_list = [float(np.asarray(x).item()) for x in all_north_poles_list]
+    all_north_poles_array = np.array(all_north_poles_list).reshape(len(all_north_poles_list), 1)
+    # float_south_poles_list = [float(np.asarray(x).item()) for x in all_south_poles_list]
     all_south_poles_array = (np.asarray(all_south_poles_list)).reshape(len(all_south_poles_list), 1)
     all_max_radii_array = (np.asarray(all_maximum_radii_list)).reshape(len(all_maximum_radii_list), 1)
 
@@ -1066,5 +1075,6 @@ def plot_and_save(R_in_CGS, g_in_CGS=9.8, T_end=10, n_thetas=40, n_sampling_time
         for row in concatenated_array:
             writer.writerow(row)
 
-
     return["All Files Saved"]
+
+plot_and_save(0.02, Bond=0.2, Web = 0.2, Ohn = 0.1, rho_in_CGS=1, sigma_in_CGS=0.1, nu_in_CGS=0.1)
